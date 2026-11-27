@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 // Hosts that serve real production traffic. The banner hides only on these;
 // every other host (the dev alias, Vercel preview URLs, localhost) shows it.
 // Add a custom production domain here when one is set up.
-const PRODUCTION_HOSTS = ['docduit.vercel.app'];
+const PRODUCTION_HOSTS = ['docduit.com', 'www.docduit.com', 'docduit.vercel.app'];
 
 /**
  * A small non-production "DEV" badge. The decision is made at runtime from the
