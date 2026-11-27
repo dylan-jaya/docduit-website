@@ -21,7 +21,7 @@ export default async function LocalizedLayout({
 }: LayoutProps) {
   const { lang } = await params;
   if (!Object.keys(dictionaries).includes(lang)) {
-    redirect('/id/');
+    redirect('/');
   }
   const vocabularies = await getDictionary(lang as Locale);
 

@@ -4,7 +4,7 @@ Docduit runs as a **single Vercel project** with two environments:
 
 | Environment | Git branch | URL | How it deploys |
 | --- | --- | --- | --- |
-| Production | `master` | https://docduit.vercel.app | Only via **Promote to Production** (manual) |
+| Production | `master` | https://docduit.com | Only via **Promote to Production** (manual) |
 | Development | `dev` | https://dev.docduit.vercel.app | Automatically on every push to `dev` |
 
 Both environments **share the same env vars** (Firebase, backend, OpenAI, secrets) — except `NEXTAUTH_URL` (see below). Because dev shares prod credentials, **dev activity reads and writes real production data.** Keep this in mind while testing.
@@ -28,7 +28,7 @@ Both environments **share the same env vars** (Firebase, backend, OpenAI, secret
    - Vercel dashboard → the project → **Deployments**
    - Open the `dev` deployment you just verified
    - Click **⋯ → Promote to Production**
-   - Confirm. It now serves at **https://docduit.vercel.app**.
+   - Confirm. It now serves at **https://docduit.com**.
 
    This click is the manual approval gate.
 
@@ -47,7 +47,11 @@ git push github dev:master   # fast-forwards master to dev's tip
 ## One-time Vercel setup
 
 ### 1. Domain
-Project → Settings → **Domains** → add `dev.docduit.vercel.app` and assign it to **Git branch → `dev`**. Leave `docduit.vercel.app` assigned to the Production branch (`master`).
+Project → Settings → **Domains**:
+- `docduit.com` → Production (`master`). At the registrar, point it at Vercel with the records the Domains page shows (an `A` record for `@`).
+- `www.docduit.com` → **Redirect to `docduit.com`** (308). Needs a `CNAME` for `www` to Vercel.
+- `docduit.vercel.app` → **Redirect to `docduit.com`** (308), so old links land on the new domain.
+- `dev.docduit.vercel.app` → **Git branch → `dev`**.
 
 ### 2. Env vars must include the Preview scope
 Promote reuses the **existing (preview-built) deployment** — it does not rebuild with production env vars. So every var the build needs must be present for the **Preview** scope too, not just Production. The simplest way: set each var's scope to **All Environments** (Production + Preview + Development).
@@ -59,7 +63,7 @@ Verify the whole set from `.example-env` is enabled for Preview (Firebase `NEXT_
 
 | Scope | Value |
 | --- | --- |
-| Production | `https://docduit.vercel.app` |
+| Production | `https://docduit.com` |
 | Preview | `https://dev.docduit.vercel.app` |
 
 Set it as two separate values (do **not** mark it "All Environments" with a single value).
@@ -88,7 +92,8 @@ In the Firebase console (project `docduit-app`), under **Authentication**:
   `auth/user-not-found` and `auth/wrong-password` into `auth/invalid-credential`, which
   is why the sign-in copy never says whether an address exists.
 - **Settings → Authorized domains →** must list `localhost`,
-  `docduit-app.firebaseapp.com`, `docduit.vercel.app`, and `dev.docduit.vercel.app`.
+  `docduit-app.firebaseapp.com`, `docduit.com`, `www.docduit.com`, `docduit.vercel.app`,
+  and `dev.docduit.vercel.app`.
   The Google popup is rejected from any domain not on this list.
 - **Templates →** customise the **email address verification** and **password reset**
   messages. Both send from `noreply@docduit-app.firebaseapp.com` unless a custom SMTP
@@ -98,7 +103,17 @@ In the Firebase console (project `docduit-app`), under **Authentication**:
 
 ## The DEV badge
 
-A small **DEV** badge renders on any non-production host (dev alias, Vercel preview URLs, `localhost`) and is hidden on `docduit.vercel.app`. It is decided at **runtime from the hostname** (`src/components/shared/env-banner.tsx`), so it stays correct even when a preview build is promoted to production. When you add a custom production domain later, add it to `PRODUCTION_HOSTS` in that file.
+A small **DEV** badge renders on any non-production host (dev alias, Vercel preview URLs, `localhost`) and is hidden on the production hosts (`docduit.com`, `www.docduit.com`, `docduit.vercel.app`). It is decided at **runtime from the hostname** (`src/components/shared/env-banner.tsx`), so it stays correct even when a preview build is promoted to production. When you add another production domain, add it to `PRODUCTION_HOSTS` in that file.
+
+---
+
+## Default language
+
+`/` has no language in the URL, so `src/middleware.ts` redirects it to `/id/` or `/en/`:
+
+1. A language the visitor already used (the `NEXT_LOCALE` cookie, set whenever they open any `/id/…` or `/en/…` page, e.g. via the header's language picker) wins.
+2. Otherwise Vercel's `x-vercel-ip-country` header: `ID` → Indonesian, any other country → English.
+3. With no country header (localhost, non-Vercel hosts) it falls back to `Accept-Language`: an Indonesian language or `-ID` region → Indonesian, else English.
 
 ---
 
@@ -106,4 +121,4 @@ A small **DEV** badge renders on any non-production host (dev alias, Vercel prev
 
 - Push a trivial commit to `dev` → it deploys **only** to `dev.docduit.vercel.app`; production is unchanged until you promote.
 - On `dev.docduit.vercel.app` the DEV badge shows, and both Google and email/password sign-in complete (confirms the Preview `NEXTAUTH_URL` and that the host is on Firebase's authorized-domains list).
-- After Promote → `docduit.vercel.app` works and the DEV badge is **hidden**.
+- After Promote → `docduit.com` works and the DEV badge is **hidden**.
