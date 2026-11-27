@@ -41,9 +41,28 @@ export function wrapUserMessageForAI(message: string): string {
   return `[USER_INPUT_START]\n${sanitized}\n[USER_INPUT_END]`;
 }
 
-export function buildGuardedChatPayload(message: string) {
+export type ChatReplyLanguage = 'en' | 'id';
+
+const REPLY_LANGUAGE_INSTRUCTIONS: Record<ChatReplyLanguage, string> = {
+  en: '[RESPONSE_LANGUAGE] Always reply in English.',
+  id: '[RESPONSE_LANGUAGE] Selalu jawab dalam Bahasa Indonesia.',
+};
+
+/**
+ * The Cloudflare Worker only forwards `message` to Stack AI (it drops
+ * `systemPrompt`), so the reply-language instruction travels in the message,
+ * outside the untrusted user-input markers.
+ */
+export function buildGuardedChatPayload(
+  message: string,
+  language?: ChatReplyLanguage,
+) {
+  const wrapped = wrapUserMessageForAI(message);
+  const instruction = language ? REPLY_LANGUAGE_INSTRUCTIONS[language] : '';
   return {
-    systemGuardrail: FINANCIAL_ASSISTANT_GUARDRAIL,
-    message: wrapUserMessageForAI(message),
+    systemGuardrail: instruction
+      ? `${FINANCIAL_ASSISTANT_GUARDRAIL}\n- ${instruction}`
+      : FINANCIAL_ASSISTANT_GUARDRAIL,
+    message: instruction ? `${instruction}\n${wrapped}` : wrapped,
   };
 }

@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { message, userId, history } = parsed.data;
-    const guarded = buildGuardedChatPayload(message);
+    const { message, userId, history, language } = parsed.data;
+    const guarded = buildGuardedChatPayload(message, language);
 
     if (!CF_WORKER_URL) {
       return NextResponse.json(
