@@ -652,6 +652,7 @@ export default function MessengerV2({
         const { stream, userId } = await askDemoAIStream(sanitizedMessage, {
           userId: demoUserId ?? undefined,
           history: previousMessages,
+          language: lang === 'en' ? 'en' : 'id',
         });
 
         if (userId && !demoUserId) {
@@ -871,7 +872,7 @@ export default function MessengerV2({
         }
         const { message: botMessage, userId: newUserId } = await askDemoAI(
           lastAnswer,
-          { userId: demoUserId ?? undefined }
+          { userId: demoUserId ?? undefined, language: lang === 'en' ? 'en' : 'id' }
         );
         if (newUserId) setDemoUserId(newUserId);
         const newChatData: ChatMessage = {

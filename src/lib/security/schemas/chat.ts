@@ -41,6 +41,7 @@ export const chatRequestSchema = z.object({
     .optional(),
   history: z.array(historyItemSchema).max(MAX_CHAT_HISTORY_ITEMS).optional(),
   stream: z.boolean().optional(),
+  language: z.enum(['en', 'id']).optional(),
 });
 
 export type ChatRequestInput = z.infer<typeof chatRequestSchema>;

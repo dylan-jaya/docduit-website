@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import fetcher from '@/lib/fetcher';
+import type { ChatReplyLanguage } from '@/lib/security/sanitize-ai-input';
 
 export interface ChatRoom {
   id: string;
@@ -154,11 +155,12 @@ type HistoryItem = {
 /** Used when NEXT_PUBLIC_CHAT_DEMO_MODE=true - calls local API route (proxies to CF worker / Stack AI). */
 export const askDemoAI = async (
   userMessage: string,
-  options?: { userId?: string; history?: HistoryItem[] }
+  options?: { userId?: string; history?: HistoryItem[]; language?: ChatReplyLanguage }
 ): Promise<{ message: string; userId?: string }> => {
-  const body: { message: string; userId?: string; history?: HistoryItem[] } = { message: userMessage };
+  const body: { message: string; userId?: string; history?: HistoryItem[]; language?: ChatReplyLanguage } = { message: userMessage };
   if (options?.userId) body.userId = options.userId;
   if (options?.history) body.history = options.history;
+  if (options?.language) body.language = options.language;
 
   const res = await fetch('/api/chat/ask', {
     method: 'POST',
@@ -175,15 +177,16 @@ export const askDemoAI = async (
 
 export const askDemoAIStream = async (
   userMessage: string,
-  options?: { userId?: string; history?: HistoryItem[] }
+  options?: { userId?: string; history?: HistoryItem[]; language?: ChatReplyLanguage }
 ): Promise<{ stream: ReadableStream<Uint8Array>; userId?: string }> => {
-  const body: { message: string; userId?: string; history?: HistoryItem[]; stream: true } = {
+  const body: { message: string; userId?: string; history?: HistoryItem[]; stream: true; language?: ChatReplyLanguage } = {
     message: userMessage,
     stream: true,
   };
 
   if (options?.userId) body.userId = options.userId;
   if (options?.history) body.history = options.history;
+  if (options?.language) body.language = options.language;
 
   const res = await fetch('/api/chat', {
     method: 'POST',
